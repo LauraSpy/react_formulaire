@@ -13,15 +13,15 @@ const formSlice = createSlice({
     reducers: {
         // Action pour sauvegarder les données du formulaire
         saveFormData: (state, action) => {
-            console.log("Current state:", state);
-            console.log("Action payload:", action.payload);
+            console.log("Current state:", state);// Pour le débogage
+            console.log("Action payload:", action.payload);// Pour le débogage
             if (!state) state = initialState;
             if (!state.formData) state.formData = [];
             //ajoute les nouvelles données au tableau (en stockant les précédentes)
             state.formData.push(action.payload);
             // Sauvegarde dans sessionStorage
             sessionStorage.setItem('formData', JSON.stringify(state.formData));
-            console.log("Updated state:", state);
+            console.log("Updated state:", state);// Pour le débogage
         }
     }
 });
