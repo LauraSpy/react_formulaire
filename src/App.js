@@ -23,6 +23,7 @@ function App() {
   const [openSnackbar, setOpenSnackbar] = useState(false); // État pour contrôler l'affichage du Snackbar
 
   const onSubmit = (data) => {
+    console.log("Submitting data:", data); // Pour le débogage
     dispatch(saveFormData(data)); // Enregistrer les données dans le store
     setOpenSnackbar(true); // Afficher le Snackbar
     reset(); // Réinitialiser le formulaire
