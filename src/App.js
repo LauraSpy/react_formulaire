@@ -1,23 +1,41 @@
+// src/App.js
 import './App.css';
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, Controller } from "react-hook-form";
-import { TextField } from "@mui/material";
+import { TextField, Alert, Snackbar } from "@mui/material";
+import { useDispatch } from 'react-redux';
+import { saveFormData } from './features/form/formSlice';
 
 function App() {
   const {
-    register, // utilisation de register, fonction de React-Hook-Form, qui permet d'enregister un champ de formulaire.
-    handleSubmit, //permet de gérer toutes les actions liées à l'envoi du formulaire
-    formState: { errors }, //va être utilisé pour gérer plusieurs erreurs dans les champs, notamment ceux liés au MDP
-    watch, //va être utilisé par le système pour vérifier la valeur entrer dans le champ de l'âge
-    trigger, //fonction pour déclencher manuellement la validation
-    control, //Utilisé pour les composants contrôlés comme Controller
-    formState, //gère l'état global du formulaire
-    clearErrors //va gérer l'effacement des erreurs
-  } = useForm({ mode: "all" }); //"mode : all" -> mettre à "all" permet de mettre plusieurs erreur sur le même type "d'action"
-  const onSubmit = (data) => console.log(data);
+    register, // utilisation de register, fonction de React-Hook-Form, qui permet d'enregistrer un champ de formulaire.
+    handleSubmit, // permet de gérer toutes les actions liées à l'envoi du formulaire
+    formState: { errors }, // va être utilisé pour gérer plusieurs erreurs dans les champs, notamment ceux liés au MDP
+    watch, // va être utilisé par le système pour vérifier la valeur entrée dans le champ de l'âge
+    trigger, // fonction pour déclencher manuellement la validation
+    control, // Utilisé pour les composants contrôlés comme Controller
+    formState, // gère l'état global du formulaire
+    clearErrors, // va gérer l'effacement des erreurs
+    reset // fonction pour réinitialiser le formulaire (après l'envoi)
+  } = useForm({ mode: "all" }); // "mode : all" -> mettre à "all" permet de mettre plusieurs erreurs sur le même type "d'action"
 
-  const age = watch("age");
+  const dispatch = useDispatch(); // Initialisation du dispatch pour envoyer des actions au store Redux
+  const [openSnackbar, setOpenSnackbar] = useState(false); // État pour contrôler l'affichage du Snackbar
 
+  const onSubmit = (data) => {
+    dispatch(saveFormData(data)); // Enregistrer les données dans le store
+    setOpenSnackbar(true); // Afficher le Snackbar
+    reset(); // Réinitialiser le formulaire
+  };
+
+  const age = watch("age"); // Observer la valeur du champ d'âge
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
 
   return (
     <div className="App">
@@ -27,10 +45,10 @@ function App() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className='input'>
           <input
-            // Le spread operator {...} est utilisé pour que les propriétés de la fonction s'étale sur tout l'élément "input". 
-            // utiliser la fonction register permet entre autre de gérer les erreurs. 
+            // Le spread operator {...} est utilisé pour que les propriétés de la fonction s'étalent sur tout l'élément "input". 
+            // utiliser la fonction register permet entre autres de gérer les erreurs. 
             {...register("firstName", { required: "First Name is required", maxLength: 20 })}
-            aria-invalid={errors.firstName ? "true" : "false"} //on vérifie s'il y a des erreurs
+            aria-invalid={errors.firstName ? "true" : "false"} // on vérifie s'il y a des erreurs
             placeholder='first name' />
           <p>*</p>
         </div>
@@ -50,7 +68,7 @@ function App() {
             {...register("age", {
               required: "Age is required",
               min: { value: 18, message: "Minimum age is 18" },
-              valueAsNumber: true //converti automatiquement la valeur en nombre
+              valueAsNumber: true // converti automatiquement la valeur en nombre
             })}
             placeholder='age' />
           <p>*</p>
@@ -81,25 +99,26 @@ function App() {
               name="password"
               defaultValue=""
               rules={{
-                required: true //champ requis
+                required: true // champ requis
               }}
               render={({ field, fieldState: { error } }) => {
-                const { ref, onChange, ...restField } = field; //fonction de rendu personnalisé pour le champ
+                const { ref, onChange, ...restField } = field; // fonction de rendu personnalisé pour le champ
                 return (
                   <TextField
-                    {...restField} // autre propriétés
-                    fullWidth //prend toute la largeur dispo
-                    label="password" //l'étiquette, qui va se réduire au-dessus du champ lorsqu'on commence à écrire
+                    {...restField} // autres propriétés
+                    fullWidth // prend toute la largeur dispo
+                    label="password" // l'étiquette, qui va se réduire au-dessus du champ lorsqu'on commence à écrire
                     size="small" // la taille de l'étiquette
-                    className='textFieldStyle' //une classe pour personnalisé le CSS
-                    helperText={formState?.errors?.password?.message} //si erreur = message affiché
-                    error={error !== undefined} //indique si le champ est en 'erreur'
+                    className='textFieldStyle' // une classe pour personnaliser le CSS
+                    helperText={formState?.errors?.password?.message} // si erreur = message affiché
+                    error={error !== undefined} // indique si le champ est en 'erreur'
+                    type="password" // Masquer le mot de passe (met des étoiles)
                     onChange={(e) => {
-                      clearErrors("password"); //efface les erreurs si elles existent
-                      if (formState.dirtyFields.passwordConfirm) { //si champ modifié
-                        trigger("passwordConfirm"); //déclenche la validation du champ
+                      clearErrors("password"); // efface les erreurs si elles existent
+                      if (formState.dirtyFields.passwordConfirm) { // si champ modifié
+                        trigger("passwordConfirm"); // déclenche la validation du champ
                       }
-                      onChange(e); //appelle la fonction onChange de départ
+                      onChange(e); // appelle la fonction onChange de départ
                     }}
                   />
                 );
@@ -115,7 +134,7 @@ function App() {
               rules={{
                 required: true,
                 validate: (value, formValues) => {
-                  return value === formValues.password; //vérifie que la confirmation correspond au mot de passe noté plus haut
+                  return value === formValues.password; // vérifie que la confirmation correspond au mot de passe noté plus haut
                 }
               }}
               render={({ field, fieldState: { error } }) => {
@@ -127,10 +146,11 @@ function App() {
                     label="password validation"
                     size="small"
                     className='textFieldStyle'
+                    type="password" // Masquer le mot de passe
                     helperText={
                       formState.errors.passwordConfirm?.type === "validate"
                         ? "Password does not match."
-                        : formState.errors.passwordConfirm?.message //autre message d'erreur (que 'les mots de passe ne correspondent pas') s'il en existe
+                        : formState.errors.passwordConfirm?.message // autre message d'erreur (que 'les mots de passe ne correspondent pas') s'il en existe
                     }
                     onChange={(event) => {
                       onChange(event);
@@ -145,6 +165,12 @@ function App() {
         </div>
         <input type="submit" />
       </form>
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        {/* ajout de snackbar pour l'alert, qui s'ouvre une fois le formulaire envoyé */}
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+          Le formulaire a été envoyé avec succès !
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
