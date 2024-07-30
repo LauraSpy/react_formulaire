@@ -21,7 +21,7 @@ const formSlice = createSlice({
             state.formData.push(action.payload);
             // Sauvegarde dans sessionStorage
             sessionStorage.setItem('formData', JSON.stringify(state.formData));
-            console.log("Updated state:", state);// Pour le débogage
+            console.log("Updated state:", state);// Pour le débogage5
         }
     }
 });
